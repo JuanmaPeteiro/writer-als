@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container">
+        <h1>Notes</h1>
+        <ul class="list-group">
+            {% for note in notes %}
+                <li class="list-group-item" data-note-id="{{ note['id'] }}">
+                    <h2 class="mb-3">{{ note['title'] }}</h2>
+                    <p>{{ note['description'] | safe }}</p>
+
+                    <ul class="list-group mt-3 chapter-list" id="chapter-list-{{ note['id'] }}" style="display: none;">
+                        {% for chapter in note['chapters'] %}
+                            <li class="list-group-item">
+                                <h3 class="mb-2">{{ chapter['chapterTitle'] }}</h3>
+                                <p>{{ chapter['content'] | safe }}</p>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+<script>
+    var listItems = document.getElementsByClassName('list-group-item');
+    Array.from(listItems).forEach(function(item) {
+        item.addEventListener('click', function() {
+            var chapterList = this.querySelector('.chapter-list');
+            chapterList.style.display = chapterList.style.display === 'none' ? 'block' : 'none';
+        });
+    });
+</script>
+<style>
+    .list-group-item{
+    cursor:pointer;
+    }
+</style>
+{% endblock %}

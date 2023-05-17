@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <h1 class="posts-title">{% block title %} My posts {% endblock %}</h1>
+            </div>
+            <div class="col-auto">
+                <button id="show-form-btn" class="btn btn-primary">New Post</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <form id="note-form" method="POST" action="/posts/add-note" style="display: none;">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title:</label>
+                        <input type="text" class="form-control" id="title" name="title">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description:</label>
+                        <div id="description" name="description"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary save-btn">Save Post</button>
+                </form>
+            </div>
+        </div>
+        <ul class="list-group">
+            {% for note in notes %}
+                <li class="list-group-item">
+                    <div class="row">
+                        <div class="col">
+                            <h2 class="mb-3">{{ note['title'] }}</h2>
+                            <p>{{ note['description'] | safe }}</p>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-primary add-chapter-btn" data-note-id="{{ note['id'] }}">Add Chapter</button>
+                        </div>
+                    </div>
+                    <div class="row chapter-form" id="chapter-form-{{ note['id'] }}" style="display: none;">
+                        <div class="col">
+                            <form method="POST" action="/posts/add-chapter">
+                                <div class="form-group">
+                                    <label for="chapterTitle">Chapter Title:</label>
+                                    <input type="text" class="form-control" id="chapterTitle" name="chapterTitle">
+                                </div>
+                                <div class="form-group">
+                                    <label for="content" class="form-label">Content:</label>
+                                    <div id="content" name="content"></div>
+                                </div>
+                                <input type="hidden" name="noteId" value="{{ note['id'] }}">
+                                <button type="submit" class="btn chpt-btn btn-primary">Save Chapter</button>
+                            </form>
+                        </div>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+
+<script>
+    var addChapterButtons = document.getElementsByClassName('add-chapter-btn');
+    Array.from(addChapterButtons).forEach(function(button) {
+        button.addEventListener('click', function() {
+            var noteId = this.getAttribute('data-note-id');
+            var form = document.getElementById('chapter-form-' + noteId);
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        });
+    });
+</script>
+
+        <script>
+            document.querySelectorAll('.chapter-form form').forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the form from submitting normally
+
+        var noteId = this.querySelector('input[name="noteId"]').value;
+        var chapterTitle = this.querySelector('input[name="chapterTitle"]').value;
+
+        // Get the TinyMCE editor instance
+        var editor = tinymce.get('content-' + noteId);
+
+        // Check if the editor instance exists and get the content
+        var chapterContent = editor ? editor.getContent() : '';
+
+        // Create a hidden input field for chapter content
+        var contentInput = document.createElement('input');
+        contentInput.setAttribute('type', 'hidden');
+        contentInput.setAttribute('name', 'content');
+        contentInput.setAttribute('value', chapterContent);
+
+        // Append the content input field to the form
+        this.appendChild(contentInput);
+
+        // Submit the form
+        this.submit();
+    });
+});
+
+
+        </script>
+
+    <script>
+        document.getElementById('show-form-btn').addEventListener('click', function() {
+            var form = document.getElementById('note-form');
+            if (form.style.display === 'none') {
+                form.style.display = 'block';
+            } else {
+                form.style.display = 'none';
+            }
+        });
+    </script>
+<script src="https://cdn.tiny.cloud/1/jhy0ecp6sp8ixh46fh73gh6lkci6lnn7fj7o1clfcx5mpm6t/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+    tinymce.init({
+        selector: '#description',
+        height: 300,
+        menubar: false,
+        plugins: [
+            'advlist autolink lists link image charmap print preview anchor',
+            'searchreplace visualblocks code fullscreen',
+            'insertdatetime media table paste code help wordcount'
+        ],
+        toolbar: 'undo redo | formatselect | ' +
+            'bold italic backcolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'removeformat | help',
+        content_css: '//www.tiny.cloud/css/codepen.min.css'
+    });
+    tinymce.init({
+        selector: '#content',
+        height: 300,
+        menubar: false,
+        plugins: [
+            'advlist autolink lists link image charmap print preview anchor',
+            'searchreplace visualblocks code fullscreen',
+            'insertdatetime media table paste code help wordcount'
+        ],
+        toolbar: 'undo redo | formatselect | ' +
+            'bold italic backcolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'removeformat | help',
+        content_css: '//www.tiny.cloud/css/codepen.min.css',
+        setup: function (editor) {
+            editor.on('change', function () {
+                tinymce.triggerSave(); // Save content on change event
+            });
+        }
+    });
+</script>
+
+
+    <style>
+        .posts-title {
+            padding: 3%;
+            padding-left: 0;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .add-chapter-btn {
+            height: 50px;
+            margin-top: 2%;
+        }
+        .col-auto {
+            display: flex;
+            align-items: center;
+        }
+        .save-btn{
+            margin-bottom: 3%;
+        }
+        .chpt-btn{
+            margin-top: 2%;
+            margin-bottom: 1%;
+        }
+    </style>
+
+{% endblock %}
