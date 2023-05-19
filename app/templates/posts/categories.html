@@ -6,9 +6,17 @@
         <ul class="list-group">
             {% for note in notes %}
                 <li class="list-group-item" data-note-id="{{ note['id'] }}">
-                    <h2 class="mb-3">{{ note['title'] }}</h2>
-                    <p>{{ note['description'] | safe }}</p>
-
+                    <div class="info-cont">
+                        <div class="img-cont">
+                            {% if note['image'] %}
+                                <img src="{{ url_for('static', filename='upload/' + note['image']) }}" alt="Note Image" style="max-width: 200px;">
+                            {% endif %}
+                        </div>
+                        <div class="title-cont">
+                            <h2 class="mb-3">{{ note['title'] }}</h2>
+                            <p>{{ note['description'] | safe }}</p>
+                        </div>
+                    </div>
                     <ul class="list-group mt-3 chapter-list" id="chapter-list-{{ note['id'] }}" style="display: none;">
                         {% for chapter in note['chapters'] %}
                             <li class="list-group-item">
@@ -21,18 +29,27 @@
             {% endfor %}
         </ul>
     </div>
-<script>
-    var listItems = document.getElementsByClassName('list-group-item');
-    Array.from(listItems).forEach(function(item) {
-        item.addEventListener('click', function() {
-            var chapterList = this.querySelector('.chapter-list');
-            chapterList.style.display = chapterList.style.display === 'none' ? 'block' : 'none';
+    <script>
+        var listItems = document.getElementsByClassName('list-group-item');
+        Array.from(listItems).forEach(function(item) {
+            item.addEventListener('click', function() {
+                var chapterList = this.querySelector('.chapter-list');
+                chapterList.style.display = chapterList.style.display === 'none' ? 'block' : 'none';
+            });
         });
-    });
-</script>
-<style>
-    .list-group-item{
-    cursor:pointer;
-    }
-</style>
+    </script>
+    <style>
+        .list-group-item {
+            cursor: pointer;
+        }
+        .info-cont{
+            display: flex;
+            flex-direction: row;
+        }
+        .title-cont{
+            display: flex;
+            flex-direction: column;
+            padding: 2%;
+        }
+    </style>
 {% endblock %}

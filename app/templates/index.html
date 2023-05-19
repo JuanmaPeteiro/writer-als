@@ -1,8 +1,67 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <span class="title"><h1>{% block title %} The Home Page of FlaskApp {% endblock %}</h1></span>
-    <div class="content">
-        <h2>This is the main Flask blueprint</h2>
+    <div class="container">
+        <h1>Liked posts</h1>
+        <div id="postCarousel" class="carousel slide" data-ride="carousel">
+            <div class="carousel-inner">
+                {% set posts_per_row = 4 %}
+                {% set post_count = notes|length %}
+                {% set row_count = (post_count + posts_per_row - 1) // posts_per_row %}
+
+                {% for row in range(row_count) %}
+                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                        <div class="row">
+                            {% set start_index = row * posts_per_row %}
+                            {% set end_index = (row + 1) * posts_per_row %}
+                            {% for note in notes[start_index:end_index] %}
+                                <div class="col">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="info-cont">
+                                                <div class="img-cont">
+                                                    {% if note['image'] %}
+                                                        <img src="{{ url_for('static', filename='upload/' + note['image']) }}" alt="Note Image" style="max-width: 200px;">
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <a class="carousel-control-prev" href="#postCarousel" role="button" data-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            </a>
+            <a class="carousel-control-next" href="#postCarousel" role="button" data-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </a>
+        </div>
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function() {
+            $('.carousel').carousel();
+        });
+    </script>
+<style>
+    /* Add this CSS to change the color of carousel control icons to black */
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+        filter: invert(100%);
+    }
+    .info-cont{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+</style>
+
 {% endblock %}

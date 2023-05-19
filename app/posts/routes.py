@@ -1,8 +1,10 @@
-import redis
 from flask import render_template, request, redirect
 from app.posts import bp
 import app
 from uuid import uuid4
+from werkzeug.utils import secure_filename
+import os
+from app import redis_instance
 
 @bp.route('/')
 def index():
@@ -47,7 +49,11 @@ def add_chapter():
     # Get the note title and content from the form data
     note_id = request.form.get('noteId')
     chapter_title = request.form.get('chapterTitle')
-    content = request.form.get('content')
+    content = None
+    for key, value in request.form.items():
+        if key.startswith('content'):
+            content = value
+            break
 
     # Check if required fields are not empty
     if not note_id or not chapter_title or not content:
@@ -64,20 +70,37 @@ def add_chapter():
     # Redirect the user to the note list page
     return redirect('/posts/categories/')
 
+@bp.route('/delete-chapter/<chapter_id>/', methods=['POST'])
+def delete_chapter(chapter_id):
+    # Delete the chapter from Redis
+    app.redis_instance.delete(f'chapter:{chapter_id}')
+
+    # Redirect the user to the note list page or any other appropriate page
+    return redirect('/posts/categories/')
+
+
 
 @bp.route('/add-note/', methods=['POST'])
 def add_note():
-    # Get the note title and content from the form data
-    app.redis_instance.ping()
+    # Get the note title, content, and image file from the form data
+    redis_instance.ping()
     title = request.form.get('title')
     description = request.form.get('description')
+    image = request.files['image']
 
     # Generate a unique ID for the note
     note_id = str(uuid4())
 
     # Save the note to Redis as a hash
-    app.redis_instance.hset(f'note:{note_id}', 'title', title)
-    app.redis_instance.hset(f'note:{note_id}', 'description', description)
+    redis_instance.hset(f'note:{note_id}', 'title', title)
+    redis_instance.hset(f'note:{note_id}', 'description', description)
+
+    # Save the image file
+    if image:
+        filename = secure_filename(image.filename)
+        upload_folder = os.path.join(bp.root_path, '..', 'static', 'upload')
+        image.save(os.path.join(upload_folder, filename))
+        redis_instance.hset(f'note:{note_id}', 'image', filename)
 
     # Redirect the user to the note list page
     return redirect('/posts/categories/')

@@ -5,8 +5,9 @@ import redis
 redis_instance = redis.Redis()
 
 def create_app(config_class=Config):
-    app = Flask(__name__)
+    app = Flask(__name__, static_url_path='/static')
     app.config.from_object(config_class)
+    app.config['UPLOAD_FOLDER'] = 'app/static/upload'
     app.redis = redis.Redis.from_url(app.config['REDIS_URL'])
 
     # Initialize Flask extensions here
