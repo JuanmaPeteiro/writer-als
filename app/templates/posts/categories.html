@@ -12,9 +12,14 @@
                                 <img src="{{ url_for('static', filename='upload/' + note['image']) }}" alt="Note Image" style="max-width: 200px;">
                             {% endif %}
                         </div>
-                        <div class="title-cont">
+                        <div class="title-cont title-cont-not">
                             <h2 class="mb-3">{{ note['title'] }}</h2>
-                            <p>{{ note['description'] | safe }}</p>
+                            <p class="description">{{ note['description'] | safe }}</p>
+                            <div class="category-list">
+                                {% for category in note['categories'] %}
+                                    <span class="category">{{ category }}</span>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                     <ul class="list-group mt-3 chapter-list" id="chapter-list-{{ note['id'] }}" style="display: none;">
@@ -29,12 +34,16 @@
             {% endfor %}
         </ul>
     </div>
-    <script>
+   <script>
         var listItems = document.getElementsByClassName('list-group-item');
         Array.from(listItems).forEach(function(item) {
             item.addEventListener('click', function() {
                 var chapterList = this.querySelector('.chapter-list');
                 chapterList.style.display = chapterList.style.display === 'none' ? 'block' : 'none';
+                chapterList.classList.toggle('fade-in');
+
+                var description = this.querySelector('.title-cont');
+                description.classList.toggle('title-cont-not');
             });
         });
     </script>
@@ -42,14 +51,51 @@
         .list-group-item {
             cursor: pointer;
         }
-        .info-cont{
+        .info-cont {
             display: flex;
             flex-direction: row;
         }
-        .title-cont{
+        .title-cont {
             display: flex;
             flex-direction: column;
             padding: 2%;
+        }
+        .list-group-item {
+            position: relative;
+        }
+        .list-group-item .title-cont-not {
+            max-height: 40vh; /* Adjust the maximum height as needed */
+            overflow: hidden;
+        }
+        .list-group-item .title-cont-not::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            height: 1em;
+            width: 100%;
+            background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+        }
+        .chapter-list {
+            display: none;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        .category-list {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .category {
+            margin-right: 5px;
+            background-color: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 5px;
         }
     </style>
 {% endblock %}

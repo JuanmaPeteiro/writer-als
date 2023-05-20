@@ -9,6 +9,9 @@ from app import redis_instance
 @bp.route('/')
 def index():
     notes = getNotes()
+    chapters = getChapters()
+    for note in notes:
+        note['chapters'] = [chapter for chapter in chapters if chapter['noteId'] == note['id']]
     return render_template('posts/index.html', notes=notes)
 
 def getNotes():
@@ -20,6 +23,7 @@ def getNotes():
         note = app.redis_instance.hgetall(note_id)
         note = {key.decode('utf-8'): value.decode('utf-8') for key, value in note.items()}
         note['id'] = note_id.decode('utf-8')
+        print(note)
         notes.append(note)
     return notes
 
@@ -70,23 +74,44 @@ def add_chapter():
     # Redirect the user to the note list page
     return redirect('/posts/categories/')
 
-@bp.route('/delete-chapter/<chapter_id>/', methods=['POST'])
+@bp.route('/delete-chapter/<chapter_id>', methods=['POST'])
 def delete_chapter(chapter_id):
+    print(f"Deleting chapter with key: {chapter_id}")
+
+    if not app.redis_instance.exists(chapter_id):
+        return "Chapter not found", 404
+
     # Delete the chapter from Redis
-    app.redis_instance.delete(f'chapter:{chapter_id}')
+    app.redis_instance.delete(chapter_id)
 
     # Redirect the user to the note list page or any other appropriate page
-    return redirect('/posts/categories/')
+    return redirect('/posts/')
+
+@bp.route('/delete-note/<noteId>', methods=['POST'])
+def delete_post(noteId):
+    print(f"Deleting note with key: {noteId}")
+
+    if not app.redis_instance.exists(noteId):
+        return "Note not found", 404
+
+    # Delete the chapter from Redis
+    app.redis_instance.delete(noteId)
+
+    # Redirect the user to the note list page or any other appropriate page
+    return redirect('/posts/')
+
 
 
 
 @bp.route('/add-note/', methods=['POST'])
 def add_note():
-    # Get the note title, content, and image file from the form data
+    # Get the note title, content, image file, and categories from the form data
     redis_instance.ping()
     title = request.form.get('title')
     description = request.form.get('description')
     image = request.files['image']
+    categories = request.form.getlist('categories')  # Get a list of selected categories
+    print(categories)
 
     # Generate a unique ID for the note
     note_id = str(uuid4())
@@ -94,6 +119,10 @@ def add_note():
     # Save the note to Redis as a hash
     redis_instance.hset(f'note:{note_id}', 'title', title)
     redis_instance.hset(f'note:{note_id}', 'description', description)
+
+    # Save the categories to Redis as a set
+    for category in categories:
+        redis_instance.sadd(f'note:{note_id}:categories', category)
 
     # Save the image file
     if image:
@@ -104,3 +133,4 @@ def add_note():
 
     # Redirect the user to the note list page
     return redirect('/posts/categories/')
+

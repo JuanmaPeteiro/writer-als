@@ -22,6 +22,18 @@
                         <div id="description" name="description" required></div>
                     </div>
                     <div class="mb-3">
+                        <label for="category" class="form-label">Categories:</label>
+                        <select class="form-select" id="category" name="category" multiple required>
+                            <option value="Category 1">Fiction</option>
+                            <option value="Category 2">Mystery</option>
+                            <option value="Category 4">Science Fiction</option>
+                            <option value="Category 5">Fantasy</option>
+                            <option value="Category 6">Romance</option>
+                            <option value="Category 7">Thriller</option>
+                            <option value="Category 8">History</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label for="image" class="form-label">Image:</label>
                         <input type="file" class="form-control" id="image" name="image" required>
                     </div>
@@ -48,6 +60,12 @@
                         </div>
                         <div class="col-auto">
                             <button class="btn btn-primary add-chapter-btn" data-note-id="{{ note['id'] }}">Add Chapter</button>
+                            <form method="POST" action="/posts/delete-note/{{ note['id'] }}" class="delete-post-form">
+                                <input type="hidden" name="noteId" value="{{ note['id'] }}">
+                                <button type="submit" class="btn btn-danger delete-note-btn">
+                                    <i class="fas fa-trash"></i> <!-- Replace 'fas fa-trash' with the appropriate delete icon class -->
+                                </button>
+                            </form>
                         </div>
                     </div>
                     <div class="row chapter-form" id="chapter-form-{{ loop.index }}" style="display: none;">
@@ -66,6 +84,22 @@
                             </form>
                         </div>
                     </div>
+                    <ul class="list-group mt-3 chapter-list" id="chapter-list-{{ note['id'] }}" style="display: none;">
+                        {% for chapter in note['chapters'] %}
+                            <li class="list-group-item">
+                                <div class="chapter-tit">
+                                    <h3 class="mb-2">{{ chapter['chapterTitle'] }}</h3>
+                                    <form method="POST" action="/posts/delete-chapter/{{ chapter['id'] }}" class="delete-chapter-form">
+                                        <input type="hidden" name="chapterId" value="{{ chapter['id'] }}">
+                                        <button type="submit" class="btn btn-danger delete-chapter-btn">Delete Chapter</button>
+                                    </form>
+                                </div>
+                                <div class="chapter-cont">
+                                    <p>{{ chapter['content'] | safe }}</p>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </li>
             <script>
     var addChapterButtons = document.getElementsByClassName('add-chapter-btn');
@@ -98,6 +132,17 @@
         });
     });
 </script>
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+            <script>
+        var listItems = document.getElementsByClassName('list-group-item');
+        Array.from(listItems).forEach(function(item) {
+            item.addEventListener('click', function() {
+                var chapterList = this.querySelector('.chapter-list');
+                chapterList.style.display = chapterList.style.display === 'none' ? 'block' : 'none';
+            });
+        });
+    </script>
             {% endfor %}
         </ul>
 
@@ -187,6 +232,8 @@ document.querySelectorAll('.chapter-form form').forEach(function(form) {
         .col-auto {
             display: flex;
             align-items: center;
+            flex-direction: column;
+            justify-content: space-between;
         }
         .save-btn{
             margin-bottom: 3%;
@@ -204,6 +251,18 @@ document.querySelectorAll('.chapter-form form').forEach(function(form) {
             display: flex;
             flex-direction: column;
             padding: 2%;
+        }
+        .col{
+            cursor: pointer;
+        }
+        .list-group-item{
+            display: flex;
+            flex-direction: column;
+        }
+        .chapter-tit{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
         }
     </style>
 
