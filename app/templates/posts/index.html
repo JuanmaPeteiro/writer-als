@@ -23,19 +23,55 @@
                     </div>
                     <div class="mb-3">
                         <label for="category" class="form-label">Categories:</label>
-                        <select class="form-select" id="category" name="category" multiple required>
-                            <option value="Category 1">Fiction</option>
-                            <option value="Category 2">Mystery</option>
-                            <option value="Category 4">Science Fiction</option>
-                            <option value="Category 5">Fantasy</option>
-                            <option value="Category 6">Romance</option>
-                            <option value="Category 7">Thriller</option>
-                            <option value="Category 8">History</option>
+                        <select class="form-select" id="category" name="categories" multiple required>
+                            <option value="Fiction">Fiction</option>
+                            <option value="Mystery">Mystery</option>
+                            <option value="Science Fiction">Science Fiction</option>
+                            <option value="Fantasy">Fantasy</option>
+                            <option value="Romance">Romance</option>
+                            <option value="Thriller">Thriller</option>
+                            <option value="History">History</option>
+                            <option value="Adventure">Adventure</option>
+                            <option value="Fanfiction">Fanfiction</option>
+                            <option value="Humor">Humor</option>
+                            <option value="Non-Fiction">Non-Fiction</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="image" class="form-label">Image:</label>
                         <input type="file" class="form-control" id="image" name="image" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary save-btn">Save Post</button>
+                </form>
+                <form id="note-form-edit" method="POST" action="/posts/edit-note" style="display: none;" enctype="multipart/form-data">
+                    <input type="hidden" name="note_id" value="">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title:</label>
+                        <input type="text" class="form-control" id="title-edit" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descriptionEdit" class="form-label">Description:</label>
+                        <div id="descriptionEdit" name="descriptionEdit" required></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Categories:</label>
+                        <select class="form-select" id="category-edit" name="categories" multiple required>
+                            <option value="Fiction">Fiction</option>
+                            <option value="Mystery">Mystery</option>
+                            <option value="Science Fiction">Science Fiction</option>
+                            <option value="Fantasy">Fantasy</option>
+                            <option value="Romance">Romance</option>
+                            <option value="Thriller">Thriller</option>
+                            <option value="History">History</option>
+                            <option value="Adventure">Adventure</option>
+                            <option value="Fanfiction">Fanfiction</option>
+                            <option value="Humor">Humor</option>
+                            <option value="Non-Fiction">Non-Fiction</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Image:</label>
+                        <input type="file" class="form-control" id="image-edit" name="image">
                     </div>
                     <button type="submit" class="btn btn-primary save-btn">Save Post</button>
                 </form>
@@ -54,18 +90,32 @@
                                 </div>
                                 <div class="title-cont">
                                     <h2 class="mb-3">{{ note['title'] }}</h2>
-                                    <p>{{ note['description'] | safe }}</p>
+                                    <div>{{ note['description'] | safe }}</div>
+                                    <div class="category-list">
+                                        {% if note['categories'] %}
+                                            {% for category in note['categories'] %}
+                                                <span class="category">{{ category }}</span>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="category">No categories</span>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-auto">
                             <button class="btn btn-primary add-chapter-btn" data-note-id="{{ note['id'] }}">Add Chapter</button>
-                            <form method="POST" action="/posts/delete-note/{{ note['id'] }}" class="delete-post-form">
-                                <input type="hidden" name="noteId" value="{{ note['id'] }}">
-                                <button type="submit" class="btn btn-danger delete-note-btn">
-                                    <i class="fas fa-trash"></i> <!-- Replace 'fas fa-trash' with the appropriate delete icon class -->
+                            <div class="opt-btns">
+                                <button type="button" class="btn btn-secondary edit-note-btn" data-note-id="{{ note['id'] }}">
+                                    <i class="fas fa-edit"></i>
                                 </button>
-                            </form>
+                                <form method="POST" action="/posts/delete-note/{{ note['id'] }}" class="delete-post-form">
+                                    <input type="hidden" name="noteId" value="{{ note['id'] }}">
+                                    <button type="submit" class="btn btn-danger delete-note-btn">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                     <div class="row chapter-form" id="chapter-form-{{ loop.index }}" style="display: none;">
@@ -132,6 +182,7 @@
         });
     });
 </script>
+
             <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
             <script>
@@ -145,47 +196,75 @@
     </script>
             {% endfor %}
         </ul>
+        <script>
+    var editNoteButtons = document.getElementsByClassName('edit-note-btn');
+    Array.from(editNoteButtons).forEach(function(button) {
+        button.addEventListener('click', function() {
+            var formEdit = document.getElementById('note-form-edit');
+            // Toggle the display of the form
+            formEdit.style.display = formEdit.style.display === 'none' ? 'block' : 'none';
+
+            var noteId = this.getAttribute('data-note-id');
+            formEdit.querySelector('input[name="note_id"]').value = noteId;
+            console.log(noteId)
+
+            // Populate the form fields with the note data
+            var listItem = button.closest('.list-group-item');
+            var title = listItem.querySelector('.title-cont h2').innerText;
 
 
-       <!--<script>
-document.querySelectorAll('.chapter-form form').forEach(function(form) {
-    form.addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent the form from submitting normally
+            var descriptionElement = listItem.querySelector('.title-cont div');
+            var descriptionEdit = descriptionElement.innerHTML;
 
-        var noteId = this.querySelector('input[name="noteId"]').value;
-        var chapterTitle = this.querySelector('input[name="chapterTitle"]').value;
+            // Set the form values
+            formEdit.querySelector('#title-edit').value = title;
 
-        // Get the TinyMCE editor instance
-        var editor = tinymce.get('content');
+            // Get the categories as an array
+            var categories = Array.from(listItem.querySelectorAll('.category'))
+                .map(function(category) { return category.innerText; });
 
-        console.log(editor.getContent())
+            var newArray = [];
+            var currentString = '';
 
-        // Check if the editor instance exists and get the content
-        var chapterContent = editor ? editor.getContent() : '';
+            categories.forEach(function(char) {
+              if (char === ',') {
+                if (currentString !== '') {
+                  newArray.push(currentString);
+                  currentString = '';
+                }
+              } else {
+                currentString += char;
+              }
+            });
 
-        // Check if required fields are not empty
-        if (!noteId || !chapterTitle || !chapterContent) {
-            return alert('Missing required fields');
-        }
+            // Add the last string if it exists after the last comma
+            if (currentString !== '') {
+              newArray.push(currentString);
+            }
 
-        // Create a hidden input field for chapter content
-        var contentInput = document.createElement('input');
-        contentInput.setAttribute('type', 'hidden');
-        contentInput.setAttribute('name', 'content');
-        contentInput.setAttribute('value', chapterContent);
+            // Get the <select> element
+            var categorySelect = formEdit.querySelector('#category-edit');
 
-        // Append the content input field to the form
-        this.appendChild(contentInput);
+            // Clear any previously selected options
+            categorySelect.selectedIndex = -1;
 
-        // Submit the form
-        this.submit();
+            // Iterate over the <option> elements in the <select> element
+            Array.from(categorySelect.options).forEach(function(option) {
+                // Check if the option value exists in the categories array
+                if (newArray.includes(option.value)) {
+                    // Set the option as selected
+                    option.selected = true;
+                }
+            });
+
+
+
+            // Scroll to the form
+            formEdit.scrollIntoView({ behavior: 'smooth' });
+            tinymce.get("descriptionEdit").setContent(descriptionEdit);
+        });
     });
-});
-
-
-
-
-        </script>-->
+</script>
 
     <script>
         document.getElementById('show-form-btn').addEventListener('click', function() {
@@ -197,7 +276,6 @@ document.querySelectorAll('.chapter-form form').forEach(function(form) {
             }
         });
     </script>
-<script src="https://cdn.tiny.cloud/1/jhy0ecp6sp8ixh46fh73gh6lkci6lnn7fj7o1clfcx5mpm6t/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
     tinymce.init({
         selector: '#description',
@@ -263,6 +341,13 @@ document.querySelectorAll('.chapter-form form').forEach(function(form) {
             display: flex;
             flex-direction: row;
             justify-content: space-between;
+        }
+        .opt-btns{
+            display: flex;
+            flex-direction: row;
+        }
+        .opt-btns form{
+            padding: 3%;
         }
     </style>
 

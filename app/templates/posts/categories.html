@@ -16,9 +16,13 @@
                             <h2 class="mb-3">{{ note['title'] }}</h2>
                             <p class="description">{{ note['description'] | safe }}</p>
                             <div class="category-list">
-                                {% for category in note['categories'] %}
-                                    <span class="category">{{ category }}</span>
-                                {% endfor %}
+                                {% if note['categories'] %}
+                                    {% for category in note['categories'] %}
+                                        <span class="category">{{ category }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="category">No categories</span>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -91,11 +95,12 @@
             flex-wrap: wrap;
             margin-top: 10px;
         }
+
         .category {
             margin-right: 5px;
-            background-color: #f0f0f0;
-            padding: 2px 5px;
             border-radius: 5px;
         }
+
+
     </style>
 {% endblock %}

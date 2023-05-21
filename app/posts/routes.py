@@ -23,7 +23,6 @@ def getNotes():
         note = app.redis_instance.hgetall(note_id)
         note = {key.decode('utf-8'): value.decode('utf-8') for key, value in note.items()}
         note['id'] = note_id.decode('utf-8')
-        print(note)
         notes.append(note)
     return notes
 
@@ -72,7 +71,7 @@ def add_chapter():
     app.redis_instance.hset(f'chapter:{chapter_id}', 'content', content)
 
     # Redirect the user to the note list page
-    return redirect('/posts/categories/')
+    return redirect('/posts/')
 
 @bp.route('/delete-chapter/<chapter_id>', methods=['POST'])
 def delete_chapter(chapter_id):
@@ -111,7 +110,6 @@ def add_note():
     description = request.form.get('description')
     image = request.files['image']
     categories = request.form.getlist('categories')  # Get a list of selected categories
-    print(categories)
 
     # Generate a unique ID for the note
     note_id = str(uuid4())
@@ -120,9 +118,8 @@ def add_note():
     redis_instance.hset(f'note:{note_id}', 'title', title)
     redis_instance.hset(f'note:{note_id}', 'description', description)
 
-    # Save the categories to Redis as a set
-    for category in categories:
-        redis_instance.sadd(f'note:{note_id}:categories', category)
+    # Save the categories as a list within the note's hash structure
+    redis_instance.hset(f'note:{note_id}', 'categories', ','.join(categories))
 
     # Save the image file
     if image:
@@ -132,5 +129,45 @@ def add_note():
         redis_instance.hset(f'note:{note_id}', 'image', filename)
 
     # Redirect the user to the note list page
-    return redirect('/posts/categories/')
+    return redirect('/posts/')
+
+@bp.route('/edit-note/', methods=['POST'])
+def edit_note():
+    # Get the note ID from the form data
+    note_id = request.form.get('note_id')
+
+    # Get the existing note data from Redis
+    note_data = redis_instance.hgetall(note_id)
+
+    # Get the updated note title, description, and categories from the form data
+    title = request.form.get('title')
+    description = request.form.get('descriptionEdit')
+    categories = request.form.getlist('categories')  # Get a list of selected categories
+
+    # Update the note data in Redis with the new values
+    redis_instance.hset(note_id, 'title', title)
+    redis_instance.hset(note_id, 'description', description)
+    redis_instance.hset(note_id, 'categories', ','.join(categories))
+
+    # Update the image file if a new file is received
+    image = request.files['image']
+
+    if image:
+        # Delete the existing image file, if any
+        existing_image = note_data.get(b'image')
+        if existing_image:
+            existing_image_path = os.path.join(bp.root_path, '..', 'static', 'upload', existing_image.decode())
+            if os.path.exists(existing_image_path):
+                os.remove(existing_image_path)
+
+        # Save the new image file
+        filename = secure_filename(image.filename)
+        upload_folder = os.path.join(bp.root_path, '..', 'static', 'upload')
+        image.save(os.path.join(upload_folder, filename))
+        redis_instance.hset(note_id, 'image', filename)
+
+    # Redirect the user to the note list page
+    return redirect('/posts/')
+
+
 

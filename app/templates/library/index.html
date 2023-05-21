@@ -1,10 +1,106 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <span class="title">
-        <h1>{% block title %} Library {% endblock %}</h1>
-    </span>
-    <div class="questions">
-        <h2>Library Blueprint</h2>
+    <div class="container">
+        <h1>Library</h1>
+        <ul class="list-group">
+            {% for note in notes %}
+                <li class="list-group-item" data-note-id="{{ note['id'] }}">
+                    <div class="info-cont">
+                        <div class="img-cont">
+                            {% if note['image'] %}
+                                <img src="{{ url_for('static', filename='upload/' + note['image']) }}" alt="Note Image" style="max-width: 200px;">
+                            {% endif %}
+                        </div>
+                        <div class="title-cont title-cont-not">
+                            <h2 class="mb-3">{{ note['title'] }}</h2>
+                            <p class="description">{{ note['description'] | safe }}</p>
+                            <div class="category-list">
+                                {% if note['categories'] %}
+                                    {% for category in note['categories'] %}
+                                        <span class="category">{{ category }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="category">No categories</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="list-group mt-3 chapter-list" id="chapter-list-{{ note['id'] }}" style="display: none;">
+                        {% for chapter in note['chapters'] %}
+                            <li class="list-group-item">
+                                <h3 class="mb-2">{{ chapter['chapterTitle'] }}</h3>
+                                <p>{{ chapter['content'] | safe }}</p>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
     </div>
+   <script>
+        var listItems = document.getElementsByClassName('list-group-item');
+        Array.from(listItems).forEach(function(item) {
+            item.addEventListener('click', function() {
+                var chapterList = this.querySelector('.chapter-list');
+                chapterList.style.display = chapterList.style.display === 'none' ? 'block' : 'none';
+                chapterList.classList.toggle('fade-in');
+
+                var description = this.querySelector('.title-cont');
+                description.classList.toggle('title-cont-not');
+            });
+        });
+    </script>
+    <style>
+        .list-group-item {
+            cursor: pointer;
+        }
+        .info-cont {
+            display: flex;
+            flex-direction: row;
+        }
+        .title-cont {
+            display: flex;
+            flex-direction: column;
+            padding: 2%;
+        }
+        .list-group-item {
+            position: relative;
+        }
+        .list-group-item .title-cont-not {
+            max-height: 40vh; /* Adjust the maximum height as needed */
+            overflow: hidden;
+        }
+        .list-group-item .title-cont-not::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            height: 1em;
+            width: 100%;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+        }
+        .chapter-list {
+            display: none;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        .category-list {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .category {
+            margin-right: 5px;
+            border-radius: 5px;
+        }
+
+
+    </style>
 {% endblock %}
