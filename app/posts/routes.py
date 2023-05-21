@@ -1,4 +1,6 @@
-from flask import render_template, request, redirect
+from flask import render_template, request, redirect, session
+
+from app.main.routes import checkUser
 from app.posts import bp
 import app
 from uuid import uuid4
@@ -8,11 +10,12 @@ from app import redis_instance
 
 @bp.route('/')
 def index():
-    notes = getNotes()
-    chapters = getChapters()
-    for note in notes:
-        note['chapters'] = [chapter for chapter in chapters if chapter['noteId'] == note['id']]
-    return render_template('posts/index.html', notes=notes)
+    if (checkUser("user:" + session['user']) == 1):
+        notes = getNotes()
+        chapters = getChapters()
+        for note in notes:
+            note['chapters'] = [chapter for chapter in chapters if chapter['noteId'] == note['id']]
+        return render_template('posts/index.html', notes=notes)
 
 def getNotes():
     note_ids = app.redis_instance.keys('note:*')
@@ -41,11 +44,12 @@ def getChapters():
 
 @bp.route('/categories/')
 def categories():
-    notes = getNotes()
-    chapters = getChapters()
-    for note in notes:
-        note['chapters'] = [chapter for chapter in chapters if chapter['noteId'] == note['id']]
-    return render_template('posts/categories.html', notes=notes)
+    if (checkUser("user:" + session['user']) == 1):
+        notes = getNotes()
+        chapters = getChapters()
+        for note in notes:
+            note['chapters'] = [chapter for chapter in chapters if chapter['noteId'] == note['id']]
+        return render_template('posts/categories.html', notes=notes)
 
 @bp.route('/add-chapter/', methods=['POST'])
 def add_chapter():
