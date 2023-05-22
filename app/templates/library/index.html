@@ -13,7 +13,15 @@
                             {% endif %}
                         </div>
                         <div class="title-cont title-cont-not">
-                            <h2 class="mb-3">{{ note['title'] }}</h2>
+                            <div class="title-like-cont">
+                                <h2 class="mb-3">{{ note['title'] }}</h2>
+                                <form id="note-form-like-{{ note['id'] }}" method="POST" action="like-note" enctype="multipart/form-data">
+                                    <input type="hidden" name="note_id" value="{{ note['id'] }}">
+                                    <div class="like-icon" data-note-id="{{ note['id'] }}">
+                                        <i class="far fa-heart"></i>
+                                    </div>
+                                </form>
+                            </div>
                             <p class="description">{{ note['description'] | safe }}</p>
                             <div class="category-list">
                                 {% if note['categories'] %}
@@ -35,22 +43,51 @@
                         {% endfor %}
                     </ul>
                 </li>
+            <script>
+    var listItems = document.getElementsByClassName('list-group-item');
+    Array.from(listItems).forEach(function(item) {
+        item.addEventListener('click', function() {
+            var chapterList = this.querySelector('.chapter-list');
+            chapterList.style.display = chapterList.style.display === 'none' ? 'block' : 'none';
+            chapterList.classList.toggle('fade-in');
+
+            var description = this.querySelector('.title-cont');
+            description.classList.toggle('title-cont-not');
+        });
+    });
+
+    var likeIcons = document.getElementsByClassName('like-icon');
+    Array.from(likeIcons).forEach(function(icon) {
+        icon.addEventListener('click', function(event) {
+            event.stopPropagation(); // Prevent triggering the click event on the parent element
+
+            var noteId = this.dataset.noteId;
+            var heartIcon = this.querySelector('i');
+            heartIcon.classList.toggle('fas');
+            heartIcon.classList.toggle('far');
+            heartIcon.classList.toggle('text-danger');
+
+            var form = document.getElementById('note-form-like-' + noteId);
+            form.submit();
+        });
+
+        var noteId = icon.dataset.noteId; // Get the note ID from the data attribute
+        var noteEmail = "{{ note['fav'] }}";
+        var sessionUser = "{{ session['user'] }}";
+        if (noteEmail === sessionUser && noteId == "{{ note['id'] }}") {
+            var heartIcon = icon.querySelector('i');
+            heartIcon.classList.add('fas');
+            heartIcon.classList.remove('far');
+            heartIcon.classList.add('text-danger');
+        }
+    });
+</script>
+
             {% endfor %}
         </ul>
     </div>
-   <script>
-        var listItems = document.getElementsByClassName('list-group-item');
-        Array.from(listItems).forEach(function(item) {
-            item.addEventListener('click', function() {
-                var chapterList = this.querySelector('.chapter-list');
-                chapterList.style.display = chapterList.style.display === 'none' ? 'block' : 'none';
-                chapterList.classList.toggle('fade-in');
 
-                var description = this.querySelector('.title-cont');
-                description.classList.toggle('title-cont-not');
-            });
-        });
-    </script>
+
     <style>
         .list-group-item {
             cursor: pointer;
@@ -95,12 +132,26 @@
             flex-wrap: wrap;
             margin-top: 10px;
         }
-
         .category {
             margin-right: 5px;
             border-radius: 5px;
         }
-
-
+        .like-icon {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .like-icon i {
+            color: black;
+            transition: color 0.2s;
+        }
+        .like-icon i.text-danger {
+            color: red;
+        }
+        .title-like-cont{
+            display: flex;
+            flex-direction: row;
+        }
     </style>
 {% endblock %}

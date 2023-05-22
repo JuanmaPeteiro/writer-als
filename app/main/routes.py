@@ -1,28 +1,26 @@
 from flask import render_template
 from app.main import bp
 from flask import render_template,session, request, redirect
-from app.posts.routes import getNotes
+from app.posts.routes import getNotes, getUserNotesLiked, getMostLiked
 from app import redis_instance
 import bcrypt
 import app
 from uuid import uuid4
 
+@bp.route('/logout', methods=['POST'])
 def logout():
-    session.pop('user')         #session.pop('user') help to remove the session from the browser
+    session.pop('user')
     return redirect('/')
 
-
-
-def checkUser(key):
+def checKey(key):
     if redis_instance.exists(key):
         return 1
+    return 0
 
 
 def checkLogin(email, password):
     # Retrieve the user's stored hashed password from Redis
     stored_password = app.redis_instance.hget(f'user:{email}', 'password')
-    print(password)
-    print(stored_password)
     string_without_prefix = str(stored_password)[2:-1]
 
     # Check if the stored password matches the entered password
@@ -60,8 +58,10 @@ def register():
 
 @bp.route('/home')
 def index():
-    print(session['user'])
-    if (checkUser("user:"+session['user']) == 1):
-        notes = getNotes()
-        return render_template('index.html', notes=notes)
-    return render_template('login.html')
+    if 'user' in session:
+        if (checKey("user:" + session['user']) == 1):
+            notes = getUserNotesLiked()
+            destac = getMostLiked()
+            print(destac)
+            return render_template('index.html', notes=notes, destac=destac)
+    return redirect('/')

@@ -1,6 +1,5 @@
 from flask import render_template, request, redirect, session
 
-from app.main.routes import checkUser
 from app.posts import bp
 import app
 from uuid import uuid4
@@ -8,14 +7,84 @@ from werkzeug.utils import secure_filename
 import os
 from app import redis_instance
 
+def checkUser(key):
+    if redis_instance.exists(key):
+        return 1
+    return 0
+
 @bp.route('/')
 def index():
-    if (checkUser("user:" + session['user']) == 1):
-        notes = getNotes()
-        chapters = getChapters()
-        for note in notes:
-            note['chapters'] = [chapter for chapter in chapters if chapter['noteId'] == note['id']]
-        return render_template('posts/index.html', notes=notes)
+    if 'user' in session:
+        if (checkUser("user:" + session['user']) == 1):
+            notes = getUserNotes()
+            chapters = getUserChapters()
+            for note in notes:
+                note['chapters'] = [chapter for chapter in chapters if chapter['noteId'] == note['id']]
+            return render_template('posts/index.html', notes=notes)
+    return redirect('/')
+
+def getUserNotes():
+    note_ids = app.redis_instance.keys('note:*')
+
+    # Retrieve note data for each ID and store in a list
+    notes = []
+    for note_id in note_ids:
+        note = app.redis_instance.hgetall(note_id)
+        note = {key.decode('utf-8'): value.decode('utf-8') for key, value in note.items()}
+        email = note.get('email')  # Retrieve the email value using the get method
+
+        # Check if the email field exists and matches the session user
+        if email and email == session['user']:
+            note['id'] = note_id.decode('utf-8')
+            notes.append(note)
+    return notes
+
+def getUserNotesLiked():
+    note_ids = app.redis_instance.keys('note:*')
+
+    # Retrieve note data for each ID and store in a list
+    notes = []
+    for note_id in note_ids:
+        note = app.redis_instance.hgetall(note_id)
+        note = {key.decode('utf-8'): value.decode('utf-8') for key, value in note.items()}
+        email = note.get('fav')  # Retrieve the email value using the get method
+
+        # Check if the email field exists and matches the session user
+        if email and email == session['user']:
+            note['id'] = note_id.decode('utf-8')
+            notes.append(note)
+    return notes
+
+def getMostLiked():
+    note_ids = app.redis_instance.keys('note:*')
+
+    # Retrieve note data for each ID and store in a list
+    notes = []
+    for note_id in note_ids:
+        note = app.redis_instance.hgetall(note_id)
+        note = {key.decode('utf-8'): value.decode('utf-8') for key, value in note.items()}
+        note['id'] = note_id.decode('utf-8')
+
+        notes.append(note)
+
+    # Count the occurrences of 'fav' in each note
+    note_counts = []
+    for note in notes:
+        fav_count = note.get('fav', '').count(note.get('fav', ''))
+        note_counts.append((note['id'], fav_count))
+
+    # Sort notes based on the count of 'fav' in descending order
+    sorted_notes = sorted(note_counts, key=lambda x: x[1], reverse=True)
+
+    # Get the IDs of the top three notes
+    top_three_ids = [note[0] for note in sorted_notes[:4]]
+
+    notes = [note for note in notes if note['id'] in top_three_ids]
+
+    return notes
+
+
+
 
 def getNotes():
     note_ids = app.redis_instance.keys('note:*')
@@ -28,6 +97,22 @@ def getNotes():
         note['id'] = note_id.decode('utf-8')
         notes.append(note)
     return notes
+
+def getUserChapters():
+    chapter_ids = app.redis_instance.keys('chapter:*')
+
+    # Retrieve chapter data for each ID and store in a list
+    chapters = []
+    for chapter_id in chapter_ids:
+        chapter = app.redis_instance.hgetall(chapter_id)
+        chapter = {key.decode('utf-8'): value.decode('utf-8') for key, value in chapter.items()}
+        email = chapter.get('email')  # Retrieve the email value using the get method
+
+        # Check if the email field exists and matches the session user
+        if email and email == session['user']:
+            chapter['id'] = chapter_id.decode('utf-8')
+            chapters.append(chapter)
+    return chapters
 
 def getChapters():
     chapter_ids = app.redis_instance.keys('chapter:*')
@@ -44,12 +129,19 @@ def getChapters():
 
 @bp.route('/categories/')
 def categories():
-    if (checkUser("user:" + session['user']) == 1):
-        notes = getNotes()
-        chapters = getChapters()
-        for note in notes:
-            note['chapters'] = [chapter for chapter in chapters if chapter['noteId'] == note['id']]
-        return render_template('posts/categories.html', notes=notes)
+    if 'user' in session:
+        if (checkUser("user:"+session['user']) == 1):
+            notes = getUserNotes()
+            chapters = getUserChapters()
+
+            likednotes = getUserNotesLiked()
+
+            for note in notes:
+                note['chapters'] = [chapter for chapter in chapters if chapter['noteId'] == note['id']]
+            for likednote in likednotes:
+                likednote['chapters'] = [chapter for chapter in chapters if chapter['noteId'] == likednote['id']]
+            return render_template('posts/categories.html', notes=notes, likednotes=likednotes)
+    return redirect('/')
 
 @bp.route('/add-chapter/', methods=['POST'])
 def add_chapter():
@@ -68,6 +160,10 @@ def add_chapter():
 
     # Generate a unique ID for the note
     chapter_id = str(uuid4())
+
+    # Save the user email as a key in the note
+    email = session['user']
+    app.redis_instance.hset(f'chapter:{chapter_id}', 'email', email)
 
     # Save the note to Redis as a hash
     app.redis_instance.hset(f'chapter:{chapter_id}', 'noteId', note_id)
@@ -121,6 +217,10 @@ def add_note():
     # Save the note to Redis as a hash
     redis_instance.hset(f'note:{note_id}', 'title', title)
     redis_instance.hset(f'note:{note_id}', 'description', description)
+
+    # Save the user email as a key in the note
+    email = session['user']
+    app.redis_instance.hset(f'note:{note_id}', 'email', email)
 
     # Save the categories as a list within the note's hash structure
     redis_instance.hset(f'note:{note_id}', 'categories', ','.join(categories))

@@ -2,7 +2,45 @@
 
 {% block content %}
     <div class="container">
-        <h1>Liked posts</h1>
+        <h1>Featured posts</h1>
+        <div id="postCarouselDest" class="carousel slide" data-ride="carousel">
+            <div class="carousel-inner">
+                {% set posts_per_row = 4 %}
+                {% set post_count = destac|length %}
+                {% set row_count = (post_count + posts_per_row - 1) // posts_per_row %}
+
+                {% for row in range(row_count) %}
+                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                        <div class="row">
+                            {% set start_index = row * posts_per_row %}
+                            {% set end_index = (row + 1) * posts_per_row %}
+                            {% for dest in destac[start_index:end_index] %}
+                                <div class="col">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="info-cont">
+                                                <div class="img-cont">
+                                                    {% if dest['image'] %}
+                                                        <img src="{{ url_for('static', filename='upload/' + dest['image']) }}" alt="Note Image" style="max-width: 200px;">
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <a class="carousel-control-prev" href="#postCarousel" role="button" data-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            </a>
+            <a class="carousel-control-next" href="#postCarousel" role="button" data-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </a>
+        </div>
+        <h1 class="liked-tit">Liked posts</h1>
         <div id="postCarousel" class="carousel slide" data-ride="carousel">
             <div class="carousel-inner">
                 {% set posts_per_row = 4 %}
@@ -61,6 +99,9 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+    }
+    .liked-tit{
+        margin-top: 5%;
     }
 </style>
 

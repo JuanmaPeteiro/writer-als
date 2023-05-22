@@ -2,7 +2,7 @@
 
 {% block content %}
     <div class="container">
-        <h1>Notes</h1>
+        <h1>My Notes</h1>
         <ul class="list-group">
             {% for note in notes %}
                 <li class="list-group-item" data-note-id="{{ note['id'] }}">
@@ -37,6 +37,41 @@
                 </li>
             {% endfor %}
         </ul>
+        <h1 class="liked-title">Liked Notes</h1>
+        <ul class="list-group">
+            {% for note in likednotes %}
+                <li class="list-group-item" data-note-id="{{ note['id'] }}">
+                    <div class="info-cont">
+                        <div class="img-cont">
+                            {% if note['image'] %}
+                                <img src="{{ url_for('static', filename='upload/' + note['image']) }}" alt="Note Image" style="max-width: 200px;">
+                            {% endif %}
+                        </div>
+                        <div class="title-cont title-cont-not">
+                            <h2 class="mb-3">{{ note['title'] }}</h2>
+                            <p class="description">{{ note['description'] | safe }}</p>
+                            <div class="category-list">
+                                {% if note['categories'] %}
+                                    {% for category in note['categories'] %}
+                                        <span class="category">{{ category }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="category">No categories</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="list-group mt-3 chapter-list" id="chapterLiked-list-{{ note['id'] }}" style="display: none;">
+                        {% for chapter in note['chapters'] %}
+                            <li class="list-group-item">
+                                <h3 class="mb-2">{{ chapter['chapterTitle'] }}</h3>
+                                <p>{{ chapter['content'] | safe }}</p>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
     </div>
    <script>
         var listItems = document.getElementsByClassName('list-group-item');
@@ -52,6 +87,9 @@
         });
     </script>
     <style>
+        .liked-title{
+            margin-top: 5%;
+        }
         .list-group-item {
             cursor: pointer;
         }
