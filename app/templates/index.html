@@ -18,13 +18,16 @@
                                 <div class="col">
                                     <div class="card">
                                         <div class="card-body">
-                                            <div class="info-cont">
+                                            <form id="form-top-{{ dest['id'] }}" class="read-form" method="POST" action="library/read-note" enctype="multipart/form-data">
+                                                <input type="hidden" name="note_id" value="{{ dest['id'] }}">
+                                            <div class="info-cont" onclick="submitFormTop('{{ dest['id'] }}', 'dest')">
                                                 <div class="img-cont">
                                                     {% if dest['image'] %}
                                                         <img src="{{ url_for('static', filename='upload/' + dest['image']) }}" alt="Note Image" style="max-width: 200px;">
                                                     {% endif %}
                                                 </div>
                                             </div>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -56,13 +59,16 @@
                                 <div class="col">
                                     <div class="card">
                                         <div class="card-body">
-                                            <div class="info-cont">
-                                                <div class="img-cont">
-                                                    {% if note['image'] %}
-                                                        <img src="{{ url_for('static', filename='upload/' + note['image']) }}" alt="Note Image" style="max-width: 200px;">
-                                                    {% endif %}
+                                            <form id="form-{{ note['id'] }}" class="read-form" method="POST" action="library/read-note" enctype="multipart/form-data">
+                                                <input type="hidden" name="note_id" value="{{ note['id'] }}">
+                                                <div class="info-cont" onclick="submitForm('{{ note['id'] }}', 'note')">
+                                                    <div class="img-cont">
+                                                        {% if note['image'] %}
+                                                            <img src="{{ url_for('static', filename='upload/' + note['image']) }}" alt="Note Image" style="max-width: 200px;">
+                                                        {% endif %}
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -88,6 +94,17 @@
         $(document).ready(function() {
             $('.carousel').carousel();
         });
+
+        function submitForm(noteId, type) {
+            var formId = 'form-' + noteId;
+            var form = document.getElementById(formId);
+            form.submit();
+        }
+        function submitFormTop(noteId, type) {
+            var formId = 'form-top-' + noteId;
+            var form = document.getElementById(formId);
+            form.submit();
+        }
     </script>
 <style>
     /* Add this CSS to change the color of carousel control icons to black */
@@ -99,6 +116,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        cursor: pointer;
     }
     .liked-tit{
         margin-top: 5%;

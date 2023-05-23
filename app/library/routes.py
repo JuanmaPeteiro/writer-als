@@ -22,6 +22,23 @@ def index():
             return render_template('library/index.html', notes=notes)
     return redirect('/')
 
+@bp.route('/read-note', methods=['GET', 'POST'])
+def read():
+    if 'user' in session:
+        if checkExists("user:" + session['user']) == 1:
+            if request.method == 'POST':
+                note_id = request.form.get('note_id')
+                note = app.redis_instance.hgetall(note_id)
+                note = {key.decode('utf-8'): value.decode('utf-8') for key, value in note.items()}
+                chapters = getChapters()
+                note['chapters'] = [chapter for chapter in chapters if chapter['noteId'] == note_id]
+
+                return render_template('library/read.html', note=note)
+            else:
+                return redirect('/library')
+    return redirect('/')
+
+
 @bp.route('/like-note', methods=['POST'])
 def like_note():
     note_id = request.form.get('note_id')

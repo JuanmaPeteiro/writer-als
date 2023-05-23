@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, session
+from flask import render_template, request, redirect, session, flash
 
 from app.posts import bp
 import app
@@ -170,6 +170,8 @@ def add_chapter():
     app.redis_instance.hset(f'chapter:{chapter_id}', 'chapterTitle', chapter_title)
     app.redis_instance.hset(f'chapter:{chapter_id}', 'content', content)
 
+    flash('Chapter successfully added', 'success')
+
     # Redirect the user to the note list page
     return redirect('/posts/')
 
@@ -183,6 +185,8 @@ def delete_chapter(chapter_id):
     # Delete the chapter from Redis
     app.redis_instance.delete(chapter_id)
 
+    flash('Chapter successfully deleted', 'success')
+
     # Redirect the user to the note list page or any other appropriate page
     return redirect('/posts/')
 
@@ -195,6 +199,8 @@ def delete_post(noteId):
 
     # Delete the chapter from Redis
     app.redis_instance.delete(noteId)
+
+    flash('Note successfully deleted', 'success')
 
     # Redirect the user to the note list page or any other appropriate page
     return redirect('/posts/')
@@ -232,6 +238,7 @@ def add_note():
         image.save(os.path.join(upload_folder, filename))
         redis_instance.hset(f'note:{note_id}', 'image', filename)
 
+    flash('Note successfully added', 'success')
     # Redirect the user to the note list page
     return redirect('/posts/')
 
@@ -269,6 +276,7 @@ def edit_note():
         upload_folder = os.path.join(bp.root_path, '..', 'static', 'upload')
         image.save(os.path.join(upload_folder, filename))
         redis_instance.hset(note_id, 'image', filename)
+    flash('Note successfully edited', 'success')
 
     # Redirect the user to the note list page
     return redirect('/posts/')

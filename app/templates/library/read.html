@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="info-cont d-flex flex-column align-items-center">
+                        <div class="img-cont">
+                            {% if note['image'] %}
+                                <img src="{{ url_for('static', filename='upload/' + note['image']) }}" alt="Note Image" style="max-width: 200px;">
+                            {% endif %}
+                        </div>
+                        <div class="title-cont title-cont-not">
+                            <h2 class="mb-3">{{ note['title'] }}</h2>
+                        </div>
+                    </div>
+                    <ul class="list-group mt-3 chapter-list" id="chapter-list-{{ note['id'] }}">
+                        {% for chapter in note['chapters'] %}
+                            <li class="list-group-item">
+                                <h3 class="mb-2 chapter-title">{{ chapter['chapterTitle'] }}</h3>
+                                <div class="mb-2 chapter-content" style="display: none;">{{ chapter['content'] | safe }}</div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card-body {
+        overflow-y: auto;
+    }
+    .title-cont {
+        margin-top: 2%;
+    }
+    .chapter-selected {
+        display: block !important;
+    }
+    .chapter-title {
+        cursor: pointer;
+    }
+    .chapter-content {
+        cursor: pointer;
+    }
+    .hidden {
+        display: none;
+    }
+</style>
+
+<script>
+    const chapterTitles = document.querySelectorAll('.chapter-title');
+    const chapterContents = document.querySelectorAll('.chapter-content');
+    const imgCont = document.querySelector('.img-cont');
+    const titleCont = document.querySelector('.title-cont');
+
+    chapterTitles.forEach((title, index) => {
+        title.addEventListener('click', () => {
+            hideChapterTitles();
+            hideChapterContents();
+            hideImgAndTitle();
+            showSelectedChapterContent(index);
+        });
+    });
+
+    chapterContents.forEach((content) => {
+        content.addEventListener('click', function() {
+            hideChapterContents();
+            hideImgAndTitle();
+            showImgAndTitle();
+            showAllChapterTitles();
+        });
+    });
+
+    function hideChapterTitles() {
+        chapterTitles.forEach((title) => {
+            title.style.display = 'none';
+        });
+    }
+
+    function hideChapterContents() {
+        chapterContents.forEach((content) => {
+            content.style.display = 'none';
+            content.classList.remove('chapter-selected');
+        });
+    }
+
+    function hideImgAndTitle() {
+        imgCont.classList.add('hidden');
+        titleCont.classList.add('hidden');
+    }
+
+    function showImgAndTitle() {
+        imgCont.classList.remove('hidden');
+        titleCont.classList.remove('hidden');
+    }
+
+    function showSelectedChapterContent(index) {
+        chapterContents[index].classList.add('chapter-selected');
+        chapterContents[index].style.display = 'block';
+    }
+
+    function showAllChapterTitles() {
+        chapterTitles.forEach((title) => {
+            title.style.display = 'block';
+        });
+    }
+</script>
+{% endblock %}

@@ -61,14 +61,6 @@
                             </div>
                         </div>
                     </div>
-                    <ul class="list-group mt-3 chapter-list" id="chapterLiked-list-{{ note['id'] }}" style="display: none;">
-                        {% for chapter in note['chapters'] %}
-                            <li class="list-group-item">
-                                <h3 class="mb-2">{{ chapter['chapterTitle'] }}</h3>
-                                <p>{{ chapter['content'] | safe }}</p>
-                            </li>
-                        {% endfor %}
-                    </ul>
                 </li>
             {% endfor %}
         </ul>

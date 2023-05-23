@@ -1,6 +1,20 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="alert alert-success alert-dismissible position-absolute top-0 end-0 m-3" role="alert" id="alert">
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            {{ messages[0] }}
+        </div>
+
+        <script>
+            setTimeout(function() {
+                document.getElementById("alert").style.display = "none";
+            }, 5000);  // Adjust the delay (in milliseconds) as per your requirement
+        </script>
+    {% endif %}
+{% endwith %}
     <div class="container">
         <div class="row">
             <div class="col">

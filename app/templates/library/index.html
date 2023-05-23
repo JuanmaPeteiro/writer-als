@@ -21,6 +21,10 @@
                                         <i class="far fa-heart"></i>
                                     </div>
                                 </form>
+                                <form class="read-form" method="POST" action="read-note" enctype="multipart/form-data">
+                                <input type="hidden" name="note_id" value="{{ note['id'] }}">
+                                <button class="btn btn-primary read-button" type="submit">Read</button>
+                                </form>
                             </div>
                             <p class="description">{{ note['description'] | safe }}</p>
                             <div class="category-list">
@@ -152,6 +156,9 @@
         .title-like-cont{
             display: flex;
             flex-direction: row;
+        }
+        .read-button{
+            margin-left: 2vw;
         }
     </style>
 {% endblock %}
