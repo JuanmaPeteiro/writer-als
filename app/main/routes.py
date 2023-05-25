@@ -1,6 +1,6 @@
 from flask import render_template
 from app.main import bp
-from flask import render_template,session, request, redirect
+from flask import render_template,session, request, redirect, flash
 from app.posts.routes import getNotes, getUserNotesLiked, getMostLiked
 from app import redis_instance
 import bcrypt
@@ -53,6 +53,7 @@ def register():
         app.redis_instance.hset(f'user:{email}', 'username', username)
         app.redis_instance.hset(f'user:{email}', 'password', password)
         app.redis_instance.hset(f'user:{email}', 'email', email)
+        flash('User successfully registered', 'success')
         return render_template('login.html')
     return render_template('register.html')
 

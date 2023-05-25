@@ -83,7 +83,21 @@ def getMostLiked():
 
     return notes
 
+def getNotesByCategory(category):
+    note_ids = app.redis_instance.keys('note:*')
 
+    # Retrieve note data for each ID and store in a list
+    notes = []
+    for note_id in note_ids:
+        note = app.redis_instance.hgetall(note_id)
+        note = {key.decode('utf-8'): value.decode('utf-8') for key, value in note.items()}
+        cat = note.get('category')  # Retrieve the email value using the get method
+
+        # Check if the category field exists and matches the category we are looking for
+        if cat and cat == category:
+            note['id'] = note_id.decode('utf-8')
+            notes.append(note)
+    return notes
 
 
 def getNotes():
